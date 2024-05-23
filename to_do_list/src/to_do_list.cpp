@@ -4,6 +4,8 @@
 #include <vector>
 
 static void addToList(std::vector<std::string> &list, std::string task) {
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
     while (true) {
         std::cout << "\nEnter your to-do task (or enter 'Q' to exit): ";
         std::getline(std::cin, task);
