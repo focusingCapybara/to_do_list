@@ -1,3 +1,3 @@
-# To-do List
+# To-do List - C++ Console Application
 
-To-do list is a C++ console application that let's you type your to-do tasks which can be saved in a file.
+To-do list let's you type your to-do tasks which can be saved in a file and be loaded when you run the application again.
