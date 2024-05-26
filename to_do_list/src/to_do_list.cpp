@@ -3,11 +3,19 @@
 #include <fstream>
 #include <vector>
 
-static void addToList(std::vector<std::string> &list, std::string task) {
+static void Log(const std::string message) {
+    std::cout << message;
+}
+static void Log(const char message) {
+    std::cout << message;
+}
+
+static void addToList(std::vector<std::string> &list) {
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::string task = "";
 
     while (true) {
-        std::cout << "\nEnter your to-do task (or enter 'Q' to exit): ";
+        Log("\nEnter your to-do task (or enter 'Q' to exit): ");
         std::getline(std::cin, task);
 
         if (task == "Q" || task == "q") {
@@ -18,20 +26,23 @@ static void addToList(std::vector<std::string> &list, std::string task) {
 }
 
 static void showTheList(const std::vector<std::string> list) {
+    Log('\n');
+
+    if (list.size() == 0) {
+        Log("Your to-do list is empty.\n\n");
+        return;
+    }
+
     short int taskNum = 1;
-
-    std::cout << '\n';
-
     for (std::string task : list) {
         std::cout << taskNum << ". " + task << '\n';
         taskNum++;
     }
-    std::cout << '\n';
+    Log('\n');
 }
 
 static void saveToFile(const std::vector<std::string> list) {
     std::ofstream listFile("list.txt");
-    short int taskNum = 1;
 
     if (listFile.is_open()) {
         std::cout << "\nFile opened successfully, writing to file...\n";
@@ -48,36 +59,41 @@ static void saveToFile(const std::vector<std::string> list) {
 }
 
 static void deleteFromList(std::vector<std::string> &list) {
-    short int delNum;
+    short int indexDel;
+    std::string userInput = "";
 
-    try {
-        showTheList(list);
-        std::cout << "\nEnter the task number you wish to delete: ";
-        std::cin >> delNum;
+    showTheList(list);
 
-        if ((delNum - 1) < 0 || (delNum - 1) > (list.size() - 1)) {
-            throw 0;
+    while (!(list.empty())) {
+        Log("\nEnter the task number you wish to delete (or enter 'Q' to go back): ");
+        std::cin >> userInput;
+
+        if (userInput == "Q" || userInput == "q") {
+            return;
         }
 
-        list.erase(list.begin() + (delNum - 1));
+        indexDel = stoi(userInput) - 1;
+
+        if (indexDel < 0 || indexDel > (list.size() - 1)) {
+            Log("Enter a valid task number.");
+            showTheList(list);
+            continue;
+        }
+
+        list.erase(list.begin() + indexDel);
+        Log("Successfully deleted a task, updated list:");
+        showTheList(list);
+        continue;
     }
-    catch (...) {
-        std::cout << "Enter valid task number.";
-        deleteFromList(list);
-    }
-    std::cout << "Successfully deleted a task, updates list:";
-    showTheList(list);
+    Log('\n');
+    Log("Your to-do list is empty.\n\n");
 }
 
-static void userMenuLog(std::string message) {
-    std::cout << message;
-}
 
 int main() {
     std::vector<std::string> list;
-    std::string task = "", line = "";
-    short int userChoice;
     std::ifstream listFile("list.txt");
+    std::string line = "";
 
     if (listFile.is_open()) {
         while (std::getline(listFile, line)) {
@@ -85,24 +101,27 @@ int main() {
         }
     }
     else {
-        std::cout << "Unable to open the file.\n";
+        Log("Unable to open the file.\n");
+        Log("Exiting...");
+        return 1;
     }
     listFile.close();
     
     while (true) {
-        userMenuLog("Select an option:\n");
-        userMenuLog("\t1. Add to to-do list\n");
-        userMenuLog("\t2. Show to-do list\n");
-        userMenuLog("\t3. Delete from to-do list\n");
-        userMenuLog("\t4. Save the list to file\n");
-        userMenuLog("\t5. Quit the program\n\n");
+        Log("Select an option:\n");
+        Log("\t1. Add to to-do list\n");
+        Log("\t2. Show to-do list\n");
+        Log("\t3. Delete from to-do list\n");
+        Log("\t4. Save the list to file\n");
+        Log("\t5. Quit the program\n\n");
 
+        short int userChoice;
         std::cout << "My choice is: ";
         std::cin >> userChoice;
 
         switch (userChoice) {
         case 1:
-            addToList(list, task);
+            addToList(list);
             break;
         case 2:
             showTheList(list);
@@ -114,10 +133,10 @@ int main() {
             saveToFile(list);
             break;
         case 5:
-            std::cout << "Exiting...";
+            Log("Exiting...");
             return 1;
         default:
-            std::cout << "Invalid input, try again.\n\n";
+            Log("Invalid input, try again.\n\n");
             break;
         }
     }
