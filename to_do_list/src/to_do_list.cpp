@@ -3,14 +3,12 @@
 #include <fstream>
 #include <vector>
 
-static void Log(const std::string message) {
-    std::cout << message;
-}
-static void Log(const char message) {
+template<typename T>
+static void Log(const T& message) {
     std::cout << message;
 }
 
-static void addToList(std::vector<std::string> &list) {
+static void addToList(std::vector<std::string>& list) {
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::string task = "";
 
@@ -21,11 +19,16 @@ static void addToList(std::vector<std::string> &list) {
         if (task == "Q" || task == "q") {
             break;
         }
-        list.push_back(task);
+        else if (!(task.empty())) {
+            list.push_back(task);
+        }
+        else {
+            Log("Task cannot be empty.\n");
+        }
     }
 }
 
-static void showTheList(const std::vector<std::string> list) {
+static void showTheList(const std::vector<std::string>& list) {
     Log('\n');
 
     if (list.size() == 0) {
@@ -34,31 +37,31 @@ static void showTheList(const std::vector<std::string> list) {
     }
 
     short int taskNum = 1;
-    for (std::string task : list) {
+    for (const std::string task : list) {
         std::cout << taskNum << ". " + task << '\n';
         taskNum++;
     }
     Log('\n');
 }
 
-static void saveToFile(const std::vector<std::string> list) {
+static void saveToFile(const std::vector<std::string>& list) {
     std::ofstream listFile("list.txt");
 
     if (listFile.is_open()) {
-        std::cout << "\nFile opened successfully, writing to file...\n";
+        Log("\nFile opened successfully, writing to file...\n");
         
-        for (std::string task : list) {
+        for (const std::string task : list) {
             listFile << task << '\n';
         }
         listFile.close();
-        std::cout << "File has been saved.\n\n";
+        Log("File has been saved.\n\n");
     }
     else {
-        std::cout << "Unable to open the file.\n";
+        Log("Unable to open the file.\n");
     }
 }
 
-static void deleteFromList(std::vector<std::string> &list) {
+static void deleteFromList(std::vector<std::string>& list) {
     short int indexDel;
     std::string userInput = "";
 
@@ -116,7 +119,7 @@ int main() {
         Log("\t5. Quit the program\n\n");
 
         short int userChoice;
-        std::cout << "My choice is: ";
+        Log("My choice is: ");
         std::cin >> userChoice;
 
         switch (userChoice) {
