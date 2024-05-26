@@ -102,13 +102,11 @@ int main() {
         while (std::getline(listFile, line)) {
             list.push_back(line);
         }
+        listFile.close();
     }
     else {
-        Log("Unable to open the file.\n");
-        Log("Exiting...");
-        return 1;
+        Log("Unable to open the txt file. A new file will be created upon saving.\n");
     }
-    listFile.close();
     
     while (true) {
         Log("Select an option:\n");
