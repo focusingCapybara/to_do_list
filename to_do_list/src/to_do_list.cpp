@@ -30,15 +30,14 @@ static void showTheList(const std::vector<std::string> list) {
 }
 
 static void saveToFile(const std::vector<std::string> list) {
-    std::ofstream listFile("list.txt", std::ios_base::app);
+    std::ofstream listFile("list.txt");
     short int taskNum = 1;
 
     if (listFile.is_open()) {
         std::cout << "\nFile opened successfully, writing to file...\n";
         
         for (std::string task : list) {
-            listFile << taskNum << ". " + task << '\n';
-            taskNum++;
+            listFile << task << '\n';
         }
         listFile.close();
         std::cout << "File has been saved.\n\n";
@@ -56,7 +55,7 @@ static void deleteFromList(std::vector<std::string> &list) {
         std::cout << "\nEnter the task number you wish to delete: ";
         std::cin >> delNum;
 
-        if (delNum < (list.size() - 1) || delNum > (list.size() - 1)) {
+        if ((delNum - 1) < 0 || (delNum - 1) > (list.size() - 1)) {
             throw 0;
         }
 
@@ -70,20 +69,33 @@ static void deleteFromList(std::vector<std::string> &list) {
     showTheList(list);
 }
 
+static void userMenuLog(std::string message) {
+    std::cout << message;
+}
+
 int main() {
     std::vector<std::string> list;
-    std::string task = "";
+    std::string task = "", line = "";
     short int userChoice;
+    std::ifstream listFile("list.txt");
 
-    // make a function to import the content from file
+    if (listFile.is_open()) {
+        while (std::getline(listFile, line)) {
+            list.push_back(line);
+        }
+    }
+    else {
+        std::cout << "Unable to open the file.\n";
+    }
+    listFile.close();
     
     while (true) {
-        std::cout << "Select an option:\n";
-        std::cout << "\t1. Add to to-do list\n";
-        std::cout << "\t2. Show to-do list\n";
-        std::cout << "\t3. Delete from to-do list\n";
-        std::cout << "\t4. Save the list to file\n";
-        std::cout << "\t5. Quit the program\n\n";
+        userMenuLog("Select an option:\n");
+        userMenuLog("\t1. Add to to-do list\n");
+        userMenuLog("\t2. Show to-do list\n");
+        userMenuLog("\t3. Delete from to-do list\n");
+        userMenuLog("\t4. Save the list to file\n");
+        userMenuLog("\t5. Quit the program\n\n");
 
         std::cout << "My choice is: ";
         std::cin >> userChoice;
