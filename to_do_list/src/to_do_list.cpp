@@ -4,8 +4,8 @@
 #include <vector>
 
 template<typename T>
-static void Log(const T& message) {
-    std::cout << message;
+static void Log(const T& MESSAGE) {
+    std::cout << MESSAGE;
 }
 
 static void addToList(std::vector<std::string>& list) {
@@ -28,29 +28,29 @@ static void addToList(std::vector<std::string>& list) {
     }
 }
 
-static void showTheList(const std::vector<std::string>& list) {
+static void showTheList(const std::vector<std::string>& LIST) {
     Log('\n');
 
-    if (list.size() == 0) {
+    if (LIST.size() == 0) {
         Log("Your to-do list is empty.\n\n");
         return;
     }
 
     short int taskNum = 1;
-    for (const std::string task : list) {
+    for (const std::string task : LIST) {
         std::cout << taskNum << ". " + task << '\n';
         taskNum++;
     }
     Log('\n');
 }
 
-static void saveToFile(const std::vector<std::string>& list) {
+static void saveToFile(const std::vector<std::string>& LIST) {
     std::ofstream listFile("list.txt");
 
     if (listFile.is_open()) {
         Log("\nFile opened successfully, writing to file...\n");
         
-        for (const std::string task : list) {
+        for (const std::string task : LIST) {
             listFile << task << '\n';
         }
         listFile.close();
@@ -90,6 +90,16 @@ static void deleteFromList(std::vector<std::string>& list) {
     }
     Log('\n');
     Log("Your to-do list is empty.\n\n");
+}
+
+static void changeFileDirectory() {
+    char changedFilePath;
+
+    Log("Enter the directory path: ");
+    std::cin >> changedFilePath;
+
+    system("cd " + changedFilePath);
+    system("type nul > list.txt");
 }
 
 
