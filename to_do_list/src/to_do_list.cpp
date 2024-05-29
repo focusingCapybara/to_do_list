@@ -92,17 +92,6 @@ static void deleteFromList(std::vector<std::string>& list) {
     Log("Your to-do list is empty.\n\n");
 }
 
-static void changeFileDirectory() {
-    char changedFilePath;
-
-    Log("Enter the directory path: ");
-    std::cin >> changedFilePath;
-
-    system("cd " + changedFilePath);
-    system("type nul > list.txt");
-}
-
-
 int main() {
     std::vector<std::string> list;
     std::ifstream listFile("list.txt");
