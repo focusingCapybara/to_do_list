@@ -1,5 +1,5 @@
-#define NOMINMAX // Fixes a problem at line 29
-#include <Windows.h>
+#define NOMINMAX // Otherwise it will interfere with std::max and std::min
+#include <Windows.h> // For modifying the console
 
 #include <iostream> // For input/output operations
 #include <sstream> // For getline input and converting types
@@ -7,9 +7,107 @@
 #include <vector> // For dynamic array
 #include <filesystem> // For file directories
 
+// Function prototypes
+template<typename T>
+static void Log(const T& MESSAGE);
+template<typename T>
+static void pathLog(const T& MESSAGE);
+template<typename T>
+static void successLog(const T& MESSAGE);
+template<typename T>
+static void errorLog(const T& MESSAGE);
+
+static void showMenu();
+static void addToVectorList(std::vector<std::string>& list);
+static void deleteFromVectorList(std::vector<std::string>& list);
+static void showTheVectorList(const std::vector<std::string>& LIST);
+static void saveToFile(const std::vector<std::string>& LIST, const std::string& TEXT_FILE_PATH);
+static void createOrOpenFileDecider(std::vector<std::string>& list, const std::string& textFilePath);
+static void importTasksFromFile(std::vector<std::string>& list, const std::string& TEXT_FILE_PATH);
+static void createNewTextFile(const std::string& TEXT_FILE_PATH);
+static std::string getUserTextFilePath(std::string& newFilePath);
+static std::string formatPath(std::string& unformattedFilePath);
+static void saveCurrentTextFilePath(const std::string& TEXT_FILE_PATH);
+static std::string getLastUsedTextFilePath();
+static std::string getExecutablePath();
+
+int main() { // show what it needs to be saved, maybe use const for textFilePath
+    std::string textFilePath = getLastUsedTextFilePath();
+    std::vector<std::string> list;
+    importTasksFromFile(list, textFilePath);
+
+    while (true) {
+        showMenu();
+
+        std::string userChoice;
+        short int userNumberChoice = 0;
+        pathLog(textFilePath);
+        Log("> My choice is: ");
+        std::cin >> userChoice;
+
+        try {
+            userNumberChoice = stoi(userChoice);
+        }
+        catch (const std::exception&) {
+            errorLog("Enter a number.\n\n");
+            continue;
+        }
+
+        switch (userNumberChoice) {
+        case 1:
+            addToVectorList(list);
+            break;
+        case 2:
+            showTheVectorList(list);
+            break;
+        case 3:
+            deleteFromVectorList(list);
+            break;
+        case 4:
+            saveToFile(list, textFilePath);
+            break;
+        case 5:
+            textFilePath = getUserTextFilePath(textFilePath);
+            textFilePath = formatPath(textFilePath);
+            createOrOpenFileDecider(list, textFilePath);
+            saveCurrentTextFilePath(textFilePath);
+            break;
+        case 6:
+            return 0;
+        default:
+            errorLog("Incorrect choice, try again.\n\n");
+            break;
+        }
+    }
+}
+
 template<typename T>
 static void Log(const T& MESSAGE) {
     std::cout << MESSAGE;
+}
+
+template<typename T>
+static void pathLog(const T& MESSAGE) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, 1);
+    std::cout << MESSAGE;
+    SetConsoleTextAttribute(hConsole, 7);
+}
+
+template<typename T>
+static void successLog(const T& MESSAGE) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, 2);
+    std::cout << MESSAGE;
+    SetConsoleTextAttribute(hConsole, 7);
+}
+
+template<typename T>
+static void errorLog(const T& MESSAGE) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, 4);
+    std::cerr << MESSAGE;
+    SetConsoleTextAttribute(hConsole, 7);
 }
 
 static void showMenu() {
@@ -25,25 +123,55 @@ static void showMenu() {
     Log("\t6. Quit the program\n\n");
 }
 
-static void addToVector(std::vector<std::string>& list) {
+static void addToVectorList(std::vector<std::string>& list) {
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::string task = "";
+    std::string task;
 
     while (true) {
-        Log("\nEnter your to-do task (or enter 'Q' to exit): ");
+        Log("\nEnter your to-do task (or enter 'Q' to go back): ");
         std::getline(std::cin, task);
 
-        if (task == "Q" || task == "q") {
-            Log('\n');
+        if (task.empty() || std::isspace(task.front()) || std::isspace(task.back())) {
+            errorLog("Cannot leave empty space at the start or at the end.\n");
+        }
+        else if (task == "Q" || task == "q") {
             break;
         }
-        else if (!(task.empty())) {
+        else {
             list.push_back(task);
         }
-        else {
-            Log("Task cannot be empty.\n");
+        Log('\n');
+    }
+}
+
+static void deleteFromVectorList(std::vector<std::string>& list) {
+    showTheVectorList(list);
+
+    while (!(list.empty())) {
+        Log("\nEnter the task number you wish to delete (or enter 'Q' to go back): ");
+        std::string userChoice;
+        std::cin >> userChoice;
+
+        if (userChoice == "Q" || userChoice == "q") {
+            break;
+        }
+
+        try {
+            size_t indexDel = std::stoi(userChoice) - 1;
+            if (indexDel < list.size()) {
+                list.erase(list.begin() + indexDel);
+                successLog("Successfully deleted a task, updated list:\n");
+                showTheVectorList(list);
+            }
+            else {
+                errorLog("Enter a valid task number.\n");
+            }
+        }
+        catch (const std::exception&) {
+            errorLog("Enter a number.\n");
         }
     }
+    Log('\n');
 }
 
 static void showTheVectorList(const std::vector<std::string>& LIST) {
@@ -54,90 +182,50 @@ static void showTheVectorList(const std::vector<std::string>& LIST) {
         return;
     }
 
+    Log("Here's your to-do list:\n");
     short int taskNum = 1;
-    for (const std::string TASK : LIST) {
-        std::cout << taskNum << ". " + TASK << '\n';
+    for (const std::string& TASK : LIST) {
+        std::cout << '\t' << taskNum << ". " + TASK << '\n';
         taskNum++;
     }
     Log('\n');
 }
 
-static void saveToFile(const std::vector<std::string>& LIST, const std::filesystem::path FILE_PATH) {
-    std::ofstream fileWriter(FILE_PATH);
+static void saveToFile(const std::vector<std::string>& LIST, const std::string& TEXT_FILE_PATH) {
+    std::ofstream fileWriter(TEXT_FILE_PATH);
 
     if (fileWriter.is_open()) {
-        Log("\nFile opened successfully, writing to file...\n");
+        successLog("\nFile opened successfully, writing to file...\n");
 
-        for (const std::string TASK : LIST) {
+        for (const std::string& TASK : LIST) {
             fileWriter << TASK << '\n';
         }
         fileWriter.close();
-        Log("File has been saved.\n\n");
+        successLog("File has been saved.\n\n");
     }
     else {
-        Log("Unable to open the file.\n");
+        errorLog("Unable to open the file.\n");
     }
 }
 
-static void deleteFromVector(std::vector<std::string>& list) {
-    short int indexDel;
-    std::string userInput;
-
-    showTheVectorList(list);
-
-    while (!(list.empty())) {
-        Log("\nEnter the task number you wish to delete (or enter 'Q' to go back): ");
-        std::cin >> userInput;
-
-        if (userInput == "Q" || userInput == "q") {
-            return;
-        }
-
-        indexDel = stoi(userInput) - 1;
-
-        if (indexDel >= 0 && indexDel < list.size()) {
-            list.erase(list.begin() + indexDel);
-            Log("Successfully deleted a task, updated list:");
-            showTheVectorList(list);
-            continue;
-        }
-        else {
-            Log("Enter a valid task number.");
-            showTheVectorList(list);
-            continue;
-        }
+static void createOrOpenFileDecider(std::vector<std::string>& list, const std::string& TEXT_FILE_PATH) {
+    // Read file
+    if (std::filesystem::exists(TEXT_FILE_PATH)) {
+        importTasksFromFile(list, TEXT_FILE_PATH);
     }
-    Log('\n');
-}
-
-static std::filesystem::path formatPath(std::string unformattefFilePath) {
-    // Gets the path and removes '\' at the start and at the end
-    size_t start = unformattefFilePath.find("\"") + 1;
-    size_t end = unformattefFilePath.find_last_of("\"");
-    std::string filePath = unformattefFilePath.substr(start, end - start);
-
-    return filePath;
-}
-
-static void saveCurrentTextFilePath(std::filesystem::path& filePath) {
-    std::ofstream iniFileWriter("C:/Users/kacpe/Desktop/config.ini"); // Path to config file
-
-    if (iniFileWriter.is_open()) {
-        iniFileWriter << "[Settings]\n";
-        iniFileWriter << "LastUsedFilePath=" << filePath;
-        iniFileWriter.close();
-    }
+    // Create file
     else {
-        Log("Unable to open the file.");
+        createNewTextFile(TEXT_FILE_PATH);
+        list.clear();
     }
 }
 
-static void importTasksFromFile(std::vector<std::string>& list, const std::filesystem::path FILE_PATH) {
-    std::ifstream textFileReader(FILE_PATH);
+static void importTasksFromFile(std::vector<std::string>& list, const std::string& TEXT_FILE_PATH) {
+    std::ifstream textFileReader(TEXT_FILE_PATH);
 
     if (textFileReader.is_open()) {
-        Log("Opened text file at: ");
-        Log(FILE_PATH);
+        successLog("Opened text file at: ");
+        successLog(TEXT_FILE_PATH);
         std::cout << std::endl << std::endl;
 
         std::string line;
@@ -148,46 +236,104 @@ static void importTasksFromFile(std::vector<std::string>& list, const std::files
         textFileReader.close();
     }
     else {
-        Log("Unable to open the text file at: ");
-        Log(FILE_PATH);
-        Log(" check for the permissions of the file or if it exists. ");
+        errorLog("Unable to open the text file at: ");
+        errorLog(TEXT_FILE_PATH);
+        errorLog(" check for the permissions of the file or if it exists.");
         std::cout << std::endl << std::endl;
     }
 }
 
-static void openTextFilePath(std::vector<std::string>& list, std::filesystem::path& newFilePath) {
-    Log("Enter the directory path: cd ");
-    std::cin >> newFilePath;
-    newFilePath += "/list.txt";
+static void createNewTextFile(const std::string& TEXT_FILE_PATH) {
+    std::ofstream fileCreator(TEXT_FILE_PATH);
+    fileCreator.close();
 
-    // Read file
-    if (std::filesystem::exists(newFilePath)) {
-        importTasksFromFile(list, newFilePath);
+    successLog("File has been created at: ");
+    successLog(TEXT_FILE_PATH);
+    std::cout << std::endl << std::endl;
+}
+
+static std::string getUserTextFilePath(std::string& newTextFilePath) {
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    while (true) {
+        Log("Enter the directory path (or enter 'Q' to go back): cd ");
+        std::string userInput;
+        std::getline(std::cin, userInput);
+
+        // Check if user wants to quit
+        if (userInput == "Q" || userInput == "q") {
+            Log('\n');
+            return newTextFilePath;
+        }
+
+        // Check if the input is empty
+        if (userInput.empty()) {
+            errorLog("Empty input. Please enter a valid path.\n");
+            continue;
+        }
+
+        // Construct the full path if /list.txt is present in the input
+        size_t pos = userInput.find("/list.txt");
+        if (pos != std::string::npos) {
+            userInput.erase(pos, std::string("/list.txt").length());
+            newTextFilePath = userInput;
+        }
+        else {
+            newTextFilePath = userInput;
+        }
+
+        // Check if the path exists
+        if (std::filesystem::exists(newTextFilePath)) {
+            break;
+        }
+        else {
+            errorLog("The path does not exist.\n");
+        }
     }
-    // Create file
-    else if (std::filesystem::exists(newFilePath.replace_filename(""))) {
-        newFilePath += "list.txt";
+    return newTextFilePath + "/list.txt";
+}
 
-        std::ofstream createTextFile(newFilePath);
-        createTextFile.close();
+static std::string formatPath(std::string& unformattedFilePath) {
+    // Formats inputted file path or saved path to avoid errors
 
-        Log("Created text file at: ");
-        Log(newFilePath);
-        std::cout << std::endl << std::endl;
+    // Replace backslashes with forward slashes
+    std::string replaceThis = "\\";
+    std::string replaceWith = "/";
+    size_t start = 0;
 
-        list.clear();
+    while ((start = unformattedFilePath.find(replaceThis, start)) != std::string::npos) {
+        unformattedFilePath.replace(start, replaceThis.length(), replaceWith);
+        start += replaceWith.length(); // Move past the replaced part
+    }
+
+    // Remove multiple forward slashes with just one
+    replaceThis = "//";
+    replaceWith = "/";
+    start = 0;
+
+    while ((start = unformattedFilePath.find(replaceThis, start)) != std::string::npos) {
+        unformattedFilePath.replace(start, replaceThis.length(), replaceWith);
+    }
+
+    std::string formattedFilePath = unformattedFilePath;
+
+    return formattedFilePath;
+}
+
+static void saveCurrentTextFilePath(const std::string& TEXT_FILE_PATH) {
+    std::ofstream iniFileWriter("C:/Users/kacpe/Desktop/config.ini"); // Path to config file
+
+    if (iniFileWriter.is_open()) {
+        iniFileWriter << "[Settings]\n";
+        iniFileWriter << "LastUsedFilePath=" << TEXT_FILE_PATH;
+        iniFileWriter.close();
     }
     else {
-        Log("The path does not exist.\n");
+        errorLog("Unable to open the file.");
     }
 }
 
-static std::filesystem::path getExecutablePath() { // Needs to be changed
-    std::filesystem::path executablePath = std::filesystem::current_path();
-    return executablePath;
-}
-
-static std::filesystem::path getLastUsedTextFilePath() {
+static std::string getLastUsedTextFilePath() {
     std::ifstream iniFileReader("C:/Users/kacpe/Desktop/config.ini"); // Path to config file
 
     if (iniFileReader.is_open()) {
@@ -196,65 +342,22 @@ static std::filesystem::path getLastUsedTextFilePath() {
             if (line.find("LastUsedFilePath=") != std::string::npos) {
                 iniFileReader.close();
 
-                std::filesystem::path formattedFilePath = formatPath(line);
-
-                return formattedFilePath;
+                return line.substr(17);
             }
         }
     }
-    else {
-        Log("Unable to find last used text file path. Creating new file...");
-    }
-    // Used to create text file where this executable is if no path has been found
-    return getExecutablePath();
+    errorLog("Unable to find last used text file path. Creating new file...\n");
+
+    // Get path where this executable is if no path has been found
+    std::string executablePath = getExecutablePath();
+    saveCurrentTextFilePath(executablePath);
+    return executablePath;
 }
 
-int main() {
-    std::filesystem::path filePath = getLastUsedTextFilePath();
-    std::vector<std::string> list;
-    importTasksFromFile(list, filePath);
+static std::string getExecutablePath() {
+    std::filesystem::path currentPath = std::filesystem::current_path();
+    std::string executablePath = currentPath.string();
+    formatPath(executablePath);
 
-    while (true) {
-        showMenu();
-
-        std::string userChoice;
-        short int userNumberChoice = 0;
-        Log(filePath);
-        Log("> My choice is: ");
-        std::cin >> userChoice;
-
-        if (userChoice == "1" || userChoice == "2" || userChoice == "3" ||
-            userChoice == "4" || userChoice == "5" || userChoice == "6" ||
-            userChoice == "7") {
-            userNumberChoice = stoi(userChoice);
-        }
-        else {
-            Log("Invalid input, try again.\n\n");
-            continue;
-        }
-
-        switch (userNumberChoice) {
-        case 1:
-            addToVector(list);
-            break;
-        case 2:
-            showTheVectorList(list);
-            break;
-        case 3:
-            deleteFromVector(list);
-            break;
-        case 4:
-            saveToFile(list, filePath);
-            break;
-        case 5:
-            openTextFilePath(list, filePath);
-            saveCurrentTextFilePath(filePath);
-            break;
-        case 6:
-            return 1;
-        default:
-            Log("Invalid input, try again.\n\n");
-            break;
-        }
-    }
+    return (executablePath + "/list.txt");
 }
