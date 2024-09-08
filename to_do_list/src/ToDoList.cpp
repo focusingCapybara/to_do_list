@@ -2,27 +2,34 @@
 #include "../include/IOFunctions.h"
 #include "../include/Log.h"
 
-#include <fstream>
+#include <fstream> // For creating files
 
 ToDoList::ToDoList() {
-    setTextFilePath(getLastUsedTextFilePath());
-    setTaskList(importTasksFromFile(m_TextFilePath));
+    initializeClass();
 }
 
-void ToDoList::showMenu() {
-    Log("==========\n");
-    Log("To-Do List\n");
-    Log("==========\n\n");
-    Log("Select an option:\n");
-    Log("\t1. Add to-do task\n");
-    Log("\t2. Show to-do list\n");
-    Log("\t3. Delete from to-do list\n");
-    Log("\t4. Save the list to file\n");
-    Log("\t5. Open/create text file\n");
-    Log("\t6. Quit the program\n\n");
+void ToDoList::initializeClass() {
+    std::string executablePath = getExecutablePath();
+    std::string iniFilePath = executablePath + "config" + ".ini";
+
+    bool doesIniFileExist = doesDirectoryExist(iniFilePath);
+
+    if (doesIniFileExist) {
+        setTextFilePath(getLastUsedTextFilePath(iniFilePath));
+        setTaskList(importTasksFromFile(m_TextFilePath));
+    }
+    else {
+        createFile(executablePath + "config", ".ini");
+        createFile(executablePath + "list", ".txt");
+        saveCurrentTxtFilePathToIniFile(executablePath + "list" + ".txt");
+    }
+
+    m_TextFilePath = executablePath + "list.txt";
 }
 
 void ToDoList::addToVectorList() {
+    // Adds tasks to the vector via validated inputs from the user
+
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     std::string task;
 
@@ -44,6 +51,9 @@ void ToDoList::addToVectorList() {
 }
 
 void ToDoList::deleteFromVectorList() {
+    // Deletes selected task in the vector by the user
+
+    // So the user can choose
     showTheVectorList();
 
     while (!(m_taskList.empty())) {
@@ -73,7 +83,13 @@ void ToDoList::deleteFromVectorList() {
     Log('\n');
 }
 
+void ToDoList::emptyVectorList() {
+    m_taskList.clear();
+}
+
 void ToDoList::showTheVectorList() {
+    // Shows saved contents from the vector to the screen
+
     Log('\n');
 
     if (m_taskList.empty()) {
@@ -92,6 +108,8 @@ void ToDoList::showTheVectorList() {
 }
 
 void ToDoList::saveToFile() {
+    // Saves tasks from the vector to the saved file path
+
     std::ofstream fileWriter(m_TextFilePath);
 
     if (fileWriter.is_open()) {

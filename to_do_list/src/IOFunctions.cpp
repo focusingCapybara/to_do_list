@@ -7,19 +7,59 @@
 #include <vector> // For dynamic array
 #include <filesystem> // For file directories
 
-void createOrOpenFileDecider(ToDoList& todoList) {
+void showMenu() {
+    Log("==========\n");
+    Log("To-Do List\n");
+    Log("==========\n\n");
+    Log("Select an option:\n");
+    Log("\t1. Add to-do task\n");
+    Log("\t2. Show to-do list\n");
+    Log("\t3. Delete from to-do list\n");
+    Log("\t4. Save the list to file\n");
+    Log("\t5. Open/create text file\n");
+    Log("\t6. Quit the program\n\n");
+}
+
+bool doesDirectoryExist(std::string const PATH) {
+    // Returns true or false if the directory exists
+
+    if (std::filesystem::exists(PATH)) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+void createFile(std::string const PATH, std::string const EXTENSTION) {
+    // Creates file with given path and extension
+
+    std::ofstream fileCreator(PATH + EXTENSTION);
+    fileCreator.close();
+
+    successLog("File has been created at: ");
+    successLog(PATH + EXTENSTION);
+    std::cout << std::endl << std::endl;
+}
+
+void createOrOpenFileDecider(ToDoList& todoList, std::string const EXTENSION) {
+    // Decides whether to create or open the file
+
+    const std::string TEXT_FILE_PATH = todoList.getTextFilePath();
     // Read file
     if (std::filesystem::exists(TEXT_FILE_PATH)) {
-        importTasksFromFile(TEXT_FILE_PATH);
+        todoList.setTaskList(importTasksFromFile(TEXT_FILE_PATH));
     }
     // Create file
     else {
-        createNewTextFile(TEXT_FILE_PATH);
-        list.clear();
+        createFile(TEXT_FILE_PATH, EXTENSION);
+        todoList.emptyVectorList();
     }
 }
 
 std::vector<std::string> importTasksFromFile(const std::string TEXT_FILE_PATH) {
+    // Reads the specified file and saves contents into the vector
+
     std::ifstream textFileReader(TEXT_FILE_PATH);
 
     if (textFileReader.is_open()) {
@@ -44,17 +84,11 @@ std::vector<std::string> importTasksFromFile(const std::string TEXT_FILE_PATH) {
     }
 }
 
-void createNewTextFile(const ToDoList& todoList) {
-    std::ofstream fileCreator(TEXT_FILE_PATH);
-    fileCreator.close();
-
-    successLog("File has been created at: ");
-    successLog(TEXT_FILE_PATH);
-    std::cout << std::endl << std::endl;
-}
-
 std::string getUserTextFilePath(ToDoList& todoList) {
+    // Gets the directory from the user and validates it
+
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::string newTextFilePath;
 
     while (true) {
         Log("Enter the directory path (or enter 'Q' to go back): cd ");
@@ -64,7 +98,7 @@ std::string getUserTextFilePath(ToDoList& todoList) {
         // Check if user wants to quit
         if (userInput == "Q" || userInput == "q") {
             Log('\n');
-            return newTextFilePath;
+            return todoList.getTextFilePath();
         }
 
         // Check if the input is empty
@@ -84,7 +118,7 @@ std::string getUserTextFilePath(ToDoList& todoList) {
         }
 
         // Check if the path exists
-        if (std::filesystem::exists(newTextFilePath)) {
+        if (doesDirectoryExist(newTextFilePath)) {
             break;
         }
         else {
@@ -94,8 +128,8 @@ std::string getUserTextFilePath(ToDoList& todoList) {
     return newTextFilePath + "/list.txt";
 }
 
-std::string formatPath(std::string& unformattedFilePath){
-    // Formats inputted file path or saved path to avoid errors
+std::string formatPath(std::string& unformattedFilePath) {
+    // Formats inputted file path or saved path to avoid reading errors
 
     // Replace backslashes with forward slashes
     std::string replaceThis = "\\";
@@ -121,12 +155,14 @@ std::string formatPath(std::string& unformattedFilePath){
     return formattedFilePath;
 }
 
-void saveCurrentTextFilePath(const ToDoList& todoList) {
-    std::ofstream iniFileWriter("C:/Users/kacpe/Desktop/config.ini"); // Path to config file
+void saveCurrentTxtFilePathToIniFile(std::string const INI_FILE_PATH) {
+    // Saves contents of the vector list to the file
+
+    std::ofstream iniFileWriter(INI_FILE_PATH); // Path to config file
 
     if (iniFileWriter.is_open()) {
         iniFileWriter << "[Settings]\n";
-        iniFileWriter << "LastUsedFilePath=" << TEXT_FILE_PATH;
+        iniFileWriter << "LastUsedFilePath=" << INI_FILE_PATH;
         iniFileWriter.close();
     }
     else {
@@ -134,8 +170,10 @@ void saveCurrentTextFilePath(const ToDoList& todoList) {
     }
 }
 
-std::string getLastUsedTextFilePath() {
-    std::ifstream iniFileReader("C:/Users/kacpe/Desktop/config.ini"); // Path to config file
+std::string getLastUsedTextFilePath(std::string const INI_FILE_PATH) {
+    // Gets last used file path in the ini file
+
+    std::ifstream iniFileReader(INI_FILE_PATH); // Path to config file
 
     if (iniFileReader.is_open()) {
         std::string line;
@@ -148,17 +186,14 @@ std::string getLastUsedTextFilePath() {
         }
     }
     errorLog("Unable to find last used text file path. Creating new file...\n");
-
-    // Get path where this executable is if no path has been found
-    std::string executablePath = getExecutablePath();
-    saveCurrentTextFilePath(executablePath);
-    return executablePath;
 }
 
 std::string getExecutablePath() {
+    // Gets the path of the this exe
+
     std::filesystem::path currentPath = std::filesystem::current_path();
     std::string executablePath = currentPath.string();
-    formatPath(executablePath);
+    executablePath = formatPath(executablePath);
 
-    return (executablePath + "/list.txt");
+    return executablePath + "/";
 }

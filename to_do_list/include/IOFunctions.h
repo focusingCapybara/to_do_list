@@ -1,16 +1,19 @@
 #pragma once
 
+// For data types
 #include <string>
 #include <vector>
 
-// Function declaration
-void createOrOpenFileDecider(ToDoList& todoList);
+// Function declarations
+void showMenu();
+bool doesDirectoryExist(std::string const PATH);
+void createFile(std::string const PATH, std::string const EXTENSTION);
+void createOrOpenFileDecider(ToDoList& todoList, std::string const EXTENSION);
 std::vector<std::string> importTasksFromFile(const std::string TEXT_FILE_PATH);
-void createNewTextFile(const ToDoList& todoList);
 std::string formatPath(std::string& unformattedFilePath);
-void saveCurrentTextFilePath(const ToDoList& todoList);
+void saveCurrentTxtFilePathToIniFile(std::string const PATH);
 
 // Getters
 std::string getUserTextFilePath(ToDoList& todoList);
-std::string getLastUsedTextFilePath();
+std::string getLastUsedTextFilePath(std::string const PATH);
 std::string getExecutablePath();

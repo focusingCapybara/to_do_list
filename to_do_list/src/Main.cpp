@@ -4,9 +4,10 @@
 
 int main() {
     ToDoList todoList;
+    std::string path;
 
     while (true) {
-        todoList.showMenu();
+        showMenu();
 
         pathLog(todoList.getTextFilePath());
         Log("> My choice is: ");
@@ -37,10 +38,11 @@ int main() {
             break;
         case 5:
             // Open/Create text file
-            getUserTextFilePath(todoList);
-            formatPath(todoList.getTextFilePath());
-            createOrOpenFileDecider(todoList);
-            saveCurrentTextFilePath(todoList);
+            todoList.setTextFilePath(getUserTextFilePath(todoList));
+            path = todoList.getTextFilePath(); // There's probably another way to do this to save memory but I don't know
+            formatPath(path);
+            createOrOpenFileDecider(todoList, ".txt");
+            saveCurrentTxtFilePathToIniFile(path);
             break;
         case 6:
             // Exit
