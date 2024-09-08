@@ -15,5 +15,5 @@ void saveCurrentTxtFilePathToIniFile(std::string const PATH);
 
 // Getters
 std::string getUserTextFilePath(ToDoList& todoList);
-std::string getLastUsedTextFilePath(std::string const PATH);
+std::string getLastUsedTextFilePath(std::string const INI_FILE_PATH);
 std::string getExecutablePath();
