@@ -23,7 +23,7 @@ void showMenu() {
 bool isInputValidated(std::string const X) {
     // Returns true if the input has passed the validation, false if it hasn't
 
-    //
+    // Checks for empty spaces
     if (X.empty() || std::isspace(X.front()) || std::isspace(X.back())) {
         return false;
     }
