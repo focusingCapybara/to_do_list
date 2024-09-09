@@ -9,8 +9,9 @@ ToDoList::ToDoList() {
 }
 
 void ToDoList::initializeClass() {
-    // Loads tasks from the file if they exist, otherwise they will be created
+    // Loads tasks from the file if they exist, otherwise files will be created
 
+    // Saves file paths to each variable
     std::string m_ExecutablePath = getExecutablePath();
     m_IniFilePath = m_ExecutablePath + "config.ini";
     m_TextFilePath = m_ExecutablePath + "list.txt";
@@ -68,6 +69,7 @@ void ToDoList::deleteFromVectorList() {
 
         try {
             size_t indexDel = std::stoi(userChoice) - 1;
+            // If the value is in the range
             if (indexDel < m_taskList.size()) {
                 m_taskList.erase(m_taskList.begin() + indexDel);
                 successLog("Successfully deleted a task, updated list:\n");
@@ -116,6 +118,7 @@ void ToDoList::saveToFile() {
     if (fileWriter.is_open()) {
         successLog("\nFile opened successfully, writing to file...\n");
 
+        // Writes a task on each line
         for (const std::string& TASK : m_taskList) {
             fileWriter << TASK << '\n';
         }

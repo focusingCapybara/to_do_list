@@ -44,6 +44,10 @@ bool doesDirectoryExist(std::string const PATH) {
 }
 
 void createOrOpenTextFile(ToDoList& todoList) {
+    // Gets chosen user path then validates it, saves the path to
+    // a variable, then decides if the text file exists on mentioned path
+    // and saves the text file path to ini file
+
     std::string userPath = getUserTextFilePath(todoList);
     userPath = formatPath(userPath);
     todoList.setTextFilePath(userPath);
@@ -90,6 +94,7 @@ std::vector<std::string> importTasksFromFile(std::string const TEXT_FILE_PATH) {
         
         std::string line;
         list.clear();
+        // Reads a saved task on each line
         while (std::getline(textFileReader, line)) {
             list.push_back(line);
         }
@@ -180,6 +185,7 @@ void saveCurrentTextFilePathToIniFile(std::string const INI_FILE_PATH, std::stri
     std::ofstream iniFileWriter(INI_FILE_PATH); // Path to config file
 
     if (iniFileWriter.is_open()) {
+        // Writes to file
         iniFileWriter << "[Settings]\n";
         iniFileWriter << "LastUsedFilePath=" << TEXT_FILE_PATH;
         iniFileWriter.close();

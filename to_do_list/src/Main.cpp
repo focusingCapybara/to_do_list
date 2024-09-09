@@ -4,7 +4,6 @@
 
 int main() {
     ToDoList todoList;
-    std::string path;
 
     while (true) {
         showMenu();
@@ -23,6 +22,7 @@ int main() {
             continue;
         }
 
+        // User options
         switch (userNumberChoice) {
         case 1:
             todoList.addToVectorList();

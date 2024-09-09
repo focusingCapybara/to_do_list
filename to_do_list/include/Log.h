@@ -8,12 +8,14 @@
 
 #include <iostream> // For printing to the console
 
+// Colour values
 enum Colour {
     RED = 4,
     GREEN = 2,
     BLUE = 1
 };
 
+// Sets the message colour
 template<typename T>
 void setMessageColour(Colour colourCode, const T& MESSAGE) {
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -22,6 +24,7 @@ void setMessageColour(Colour colourCode, const T& MESSAGE) {
     SetConsoleTextAttribute(hConsole, 7);
 }
 
+// Log levels
 template<typename T>
 void Log(const T& MESSAGE) {
     std::cout << MESSAGE;
