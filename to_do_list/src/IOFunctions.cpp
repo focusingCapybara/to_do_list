@@ -20,6 +20,18 @@ void showMenu() {
     Log("\t6. Quit the program\n\n");
 }
 
+bool isInputValidated(std::string const X) {
+    // Returns true if the input has passed the validation, false if it hasn't
+
+    //
+    if (X.empty() || std::isspace(X.front()) || std::isspace(X.back())) {
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
 bool doesDirectoryExist(std::string const PATH) {
     // Returns true or false if the directory exists
 
@@ -31,50 +43,57 @@ bool doesDirectoryExist(std::string const PATH) {
     }
 }
 
-void createFile(std::string const PATH, std::string const EXTENSTION) {
-    // Creates file with given path and extension
+void createOrOpenTextFile(ToDoList& todoList) {
+    std::string userPath = getUserTextFilePath(todoList);
+    userPath = formatPath(userPath);
+    todoList.setTextFilePath(userPath);
+    createOrOpenFileDecider(todoList);
+    saveCurrentTextFilePathToIniFile(todoList.getIniFilePath(), todoList.getTextFilePath());
+}
 
-    std::ofstream fileCreator(PATH + EXTENSTION);
+void createFile(std::string const FULL_PATH) {
+    // Creates file with given validated path and extension
+
+    std::ofstream fileCreator(FULL_PATH);
     fileCreator.close();
 
     successLog("File has been created at: ");
-    successLog(PATH + EXTENSTION);
+    successLog(FULL_PATH);
     std::cout << std::endl << std::endl;
 }
 
-void createOrOpenFileDecider(ToDoList& todoList, std::string const EXTENSION) {
+void createOrOpenFileDecider(ToDoList& todoList) {
     // Decides whether to create or open the file
 
     const std::string TEXT_FILE_PATH = todoList.getTextFilePath();
     // Read file
-    if (std::filesystem::exists(TEXT_FILE_PATH)) {
+    if (doesDirectoryExist(TEXT_FILE_PATH)) {
         todoList.setTaskList(importTasksFromFile(TEXT_FILE_PATH));
     }
     // Create file
     else {
-        createFile(TEXT_FILE_PATH, EXTENSION);
+        createFile(TEXT_FILE_PATH);
         todoList.emptyVectorList();
     }
 }
 
-std::vector<std::string> importTasksFromFile(const std::string TEXT_FILE_PATH) {
+std::vector<std::string> importTasksFromFile(std::string const TEXT_FILE_PATH) {
     // Reads the specified file and saves contents into the vector
 
     std::ifstream textFileReader(TEXT_FILE_PATH);
+    std::vector<std::string> list;
 
     if (textFileReader.is_open()) {
         successLog("Opened text file at: ");
         successLog(TEXT_FILE_PATH);
         std::cout << std::endl << std::endl;
-
-        std::vector<std::string> list;
+        
         std::string line;
         list.clear();
         while (std::getline(textFileReader, line)) {
             list.push_back(line);
         }
         textFileReader.close();
-        return list;
     }
     else {
         errorLog("Unable to open the text file at: ");
@@ -82,6 +101,7 @@ std::vector<std::string> importTasksFromFile(const std::string TEXT_FILE_PATH) {
         errorLog(" check for the permissions of the file or if it exists.");
         std::cout << std::endl << std::endl;
     }
+    return list;
 }
 
 std::string getUserTextFilePath(ToDoList& todoList) {
@@ -100,9 +120,8 @@ std::string getUserTextFilePath(ToDoList& todoList) {
             Log('\n');
             return todoList.getTextFilePath();
         }
-
         // Check if the input is empty
-        if (userInput.empty()) {
+        else if (isInputValidated(userInput) == false) {
             errorLog("Empty input. Please enter a valid path.\n");
             continue;
         }
@@ -155,14 +174,14 @@ std::string formatPath(std::string& unformattedFilePath) {
     return formattedFilePath;
 }
 
-void saveCurrentTxtFilePathToIniFile(std::string const INI_FILE_PATH) {
+void saveCurrentTextFilePathToIniFile(std::string const INI_FILE_PATH, std::string const TEXT_FILE_PATH) {
     // Saves contents of the vector list to the file
 
     std::ofstream iniFileWriter(INI_FILE_PATH); // Path to config file
 
     if (iniFileWriter.is_open()) {
         iniFileWriter << "[Settings]\n";
-        iniFileWriter << "LastUsedFilePath=" << INI_FILE_PATH;
+        iniFileWriter << "LastUsedFilePath=" << TEXT_FILE_PATH;
         iniFileWriter.close();
     }
     else {
@@ -170,7 +189,7 @@ void saveCurrentTxtFilePathToIniFile(std::string const INI_FILE_PATH) {
     }
 }
 
-std::string getLastUsedTextFilePath(std::string const INI_FILE_PATH) {
+std::string getLastUsedTextFilePathFromFile(std::string const INI_FILE_PATH) {
     // Gets last used file path in the ini file
 
     std::ifstream iniFileReader(INI_FILE_PATH); // Path to config file

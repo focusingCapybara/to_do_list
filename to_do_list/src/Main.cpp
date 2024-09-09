@@ -37,12 +37,7 @@ int main() {
             todoList.saveToFile();
             break;
         case 5:
-            // Open/Create text file
-            todoList.setTextFilePath(getUserTextFilePath(todoList));
-            path = todoList.getTextFilePath(); // There's probably another way to do this to save memory but I don't know
-            formatPath(path);
-            createOrOpenFileDecider(todoList, ".txt");
-            saveCurrentTxtFilePathToIniFile(path);
+            createOrOpenTextFile(todoList);
             break;
         case 6:
             // Exit

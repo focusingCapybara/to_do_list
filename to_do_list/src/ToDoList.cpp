@@ -9,22 +9,23 @@ ToDoList::ToDoList() {
 }
 
 void ToDoList::initializeClass() {
-    std::string executablePath = getExecutablePath();
-    std::string iniFilePath = executablePath + "config" + ".ini";
+    // Loads tasks from the file if they exist, otherwise they will be created
 
-    bool doesIniFileExist = doesDirectoryExist(iniFilePath);
+    std::string m_ExecutablePath = getExecutablePath();
+    m_IniFilePath = m_ExecutablePath + "config.ini";
+    m_TextFilePath = m_ExecutablePath + "list.txt";
+
+    bool doesIniFileExist = doesDirectoryExist(m_IniFilePath);
 
     if (doesIniFileExist) {
-        setTextFilePath(getLastUsedTextFilePath(iniFilePath));
+        setTextFilePath(getLastUsedTextFilePathFromFile(m_IniFilePath));
         setTaskList(importTasksFromFile(m_TextFilePath));
     }
     else {
-        createFile(executablePath + "config", ".ini");
-        createFile(executablePath + "list", ".txt");
-        saveCurrentTxtFilePathToIniFile(executablePath + "list" + ".txt");
+        createFile(m_IniFilePath);
+        createFile(m_TextFilePath);
+        saveCurrentTextFilePathToIniFile(m_ExecutablePath + "config.ini", m_ExecutablePath + "list.txt");
     }
-
-    m_TextFilePath = executablePath + "list.txt";
 }
 
 void ToDoList::addToVectorList() {
@@ -37,11 +38,11 @@ void ToDoList::addToVectorList() {
         Log("\nEnter your to-do task (or enter 'Q' to go back): ");
         std::getline(std::cin, task);
 
-        if (task.empty() || std::isspace(task.front()) || std::isspace(task.back())) {
-            errorLog("Cannot leave empty space at the start or at the end.\n");
-        }
-        else if (task == "Q" || task == "q") {
+        if (task == "Q" || task == "q") {
             break;
+        }
+        else if (isInputValidated(task) == false) {
+            errorLog("Cannot leave empty space at the start or at the end.\n");
         }
         else {
             m_taskList.push_back(task);
@@ -132,6 +133,10 @@ void ToDoList::setTextFilePath(std::string x) {
 
 std::string ToDoList::getTextFilePath() {
     return m_TextFilePath;
+}
+
+std::string ToDoList::getIniFilePath() {
+    return m_IniFilePath;
 }
 
 void ToDoList::setTaskList(std::vector<std::string> x) {
